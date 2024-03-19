@@ -1,38 +1,235 @@
-.App {
-  text-align: center;
+@font-face {
+  font-family: "Satoshi";
+  src: url("./fonts/Satoshi-Variable.ttf") format("truetype");
+  font-weight: 400; /* Regular */
+  font-style: normal;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+@font-face {
+  font-family: "Satoshi";
+  src: url("./fonts/Satoshi-VariableItalic.ttf") format("truetype");
+  font-weight: 400; /* Bold */
+  font-style: italic;
+}
+.container {
+  background-color: #000;
+  width: 99.9vw;
+  height: 99.9vh;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.ab {
+  position: absolute;
+  width: 100%;
+  height: 100%;
 }
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+.spline-cards {
+  width: 100%;
+  margin: -10px;
+  position: absolute;
+  z-index: 3;
+  background: none;
+}
+.spline-cards-end {
+  margin-top: -100%;
+  position: absolute;
+  z-index: 3;
+  opacity: 0;
+  background: none;
+  transition: margin-top 5s ease-in, opacity 2s ease;
+}
+.btn {
+  position: relative;
+  width: 150px;
+  cursor: pointer;
+  z-index: 2;
+  color: rgba(255, 255, 255, 0.7);
+  border-width: 2px;
+  border-radius: 20px;
+  border: solid;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
+  text-align: center;
+  display: flex;
+  height: 50px;
+  margin-left: auto;
+  margin-top: 70vh;
+  margin-right: auto;
+}
+.btn-end {
+  opacity: 0;
+  margin-top: 0vh;
+  transition: margin-top 2.5s ease-in, opacity 2s ease;
+}
+.btn:hover {
+  background-color: azure;
+}
+.btn:hover h1 {
+  color: #000;
+}
+.hidden {
+  display: none;
+}
+.btn h1 {
   color: white;
+  font-family: "Satoshi";
+  margin-top: 13px;
+  font-size: 18px;
 }
 
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
+@keyframes fadeIn {
   from {
-    transform: rotate(0deg);
+    opacity: 0;
   }
   to {
-    transform: rotate(360deg);
+    opacity: 1;
   }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    top: 150%;
+  }
+  to {
+    opacity: 1;
+    top: 50%;
+  }
+}
+
+.center-container {
+  width: 850px;
+  height: 500px;
+  position: absolute;
+  margin-top: -40px;
+  display: flex;
+  top: 50%;
+  gap: 50px;
+  left: 50%;
+  opacity: 1;
+  z-index: 10;
+  animation: fadeInUp 2s ease-in forwards;
+  transform: translate(-50%, -50%);
+}
+.upload-container .large-icon {
+  margin-left: auto;
+  margin-right: auto;
+  width: 150px;
+  margin-bottom: 10px;
+}
+.upload-container h1 {
+  margin-bottom: 5px;
+}
+.upload-container p {
+  margin-bottom: 35px;
+}
+.upload-container {
+  justify-content: center;
+  height: 100%;
+  border: solid;
+  font-family: "Satoshi";
+  font-weight: 700;
+  color: rgba(255, 255, 255, 1);
+  border-color: rgba(255, 255, 255, 0.7);
+  border-width: 2px;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  width: 50%;
+  background-color: rgba(255, 255, 255, 0.1);
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.upload-btn {
+  border-radius: 20px;
+  position: relative;
+  width: 250px;
+  cursor: pointer;
+  z-index: 2;
+  border-width: 2px;
+  border: solid;
+  justify-content: center;
+  text-align: center;
+  display: flex;
+  padding: 10px;
+  margin-left: auto;
+  margin-top: 30px;
+  margin-bottom: 15px;
+  margin-right: auto;
+  font-size: 18px;
+}
+
+.upload-btn:hover {
+  background-color: #ffffff;
+  color: #000;
+}
+.upload-container .large-input {
+  width: 90%;
+  height: 200px;
+  margin-left: auto;
+  margin-top: 10px;
+  font-family: monospace;
+  margin-bottom: 15px;
+  margin-right: auto;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  resize: vertical;
+  background-color: #0f0f0f;
+  color: #ffffff;
+}
+.upload-container .large-input::placeholder {
+  color: #9a9a9a;
+}
+.file-name {
+  display: block;
+  margin-top: 10px;
+  font-weight: 200;
+  color: #d8d8d8;
+}
+
+.ctn-btn {
+  border-radius: 20px;
+  position: absolute;
+  width: 250px;
+  cursor: pointer;
+  z-index: 2;
+  border-width: 2px;
+  border: solid;
+  justify-content: center;
+  text-align: center;
+  background: none;
+  padding: 10px;
+  color: #ffffff;
+  margin-top: 600px;
+  font-size: 18px;
+  left: 50%;
+  opacity: 1;
+  transform: translate(-50%);
+  transition: all 2s ease;
+}
+.ctn-btn:hover {
+  background-color: #ffffff;
+  color: #000;
+}
+.ctn-btn-hidden {
+  border-radius: 20px;
+  position: absolute;
+  width: 250px;
+  cursor: pointer;
+  z-index: 2;
+  border-width: 2px;
+  border: solid;
+  justify-content: center;
+  text-align: center;
+  background: none;
+  padding: 10px;
+  color: #ffffff;
+  margin-top: 1000px;
+  font-size: 18px;
+  left: 50%;
+  transform: translate(-50%);
+  opacity: 0;
+  transition: all 2s ease;
 }
