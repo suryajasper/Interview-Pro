@@ -1,34 +1,51 @@
-const { createSession,
-    getResponse,
-    getTranscript,
-    getAnalysis 
-} = require('./gpt');
+const express = require('express');
+const gpt = require('./gpt');
+const bodyParser = require('body-parser');
 
-const readline = require('readline/promises');
+const app = express();
+const port = 6969;
 
-async function gpt() {
-    console.log('Initializing Input')
-    const rl = readline.createInterface({
-        input: process.stdin,
-        output: process.stdout,
-    });
-      
+app.use(bodyParser.json());
 
-    console.log('Creating GPT session');
-    let sessionId = await createSession();
-    console.log(`Created session "${sessionId}"`);
-
-    let firstResponse = await getResponse(sessionId, "Hello. Please begin the interview.");
-    console.log(`Davey: ${firstResponse}`);
-    
-    for (let i = 0; i < 3; i++) {
-        let userInput = await rl.question('User: ');
-        let gptResponse = await getResponse(sessionId, userInput);
-        console.log(`Davey: ${gptResponse}`);
+app.post('/createSession', async (req, res) => {
+    try {
+        const sessionId = await gpt.createSession();
+        res.json({ sessionId });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
+});
 
-    let analysis = await getAnalysis(sessionId);
-    console.log(`Analysis:\n${analysis}`);
-}
+app.post('/getResponse', async (req, res) => {
+    const { sessionId, userMessage } = req.body;
+    try {
+        const response = await gpt.getResponse(sessionId, userMessage);
+        res.json({ response });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
 
-gpt();
+app.get('/getAnalysis/:sessionId', async (req, res) => {
+    const { sessionId } = req.params;
+    try {
+        const analysis = await gpt.getAnalysis(sessionId);
+        res.json({ analysis });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/getTranscript/:sessionId', async (req, res) => {
+    const { sessionId } = req.params;
+    try {
+        const transcript = await gpt.getTranscript(sessionId);
+        res.send(transcript);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+});

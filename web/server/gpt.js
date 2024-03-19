@@ -90,9 +90,34 @@ async function getAnalysis(sessionId) {
         }
     });
     
-    return response.data.choices[0].message.content;
+    let analysisText = response.data.choices[0].message.content;
+    let analysisObj = parseAnalysisText(analysisText);
+    
+    return analysisObj;
 }
 
+function parseAnalysisText(analysisText) {
+    const analysisObject = {
+        "Start Doing": "",
+        "Try to Do More of": "",
+        "Keep Doing": "",
+        "Do Less of": "",
+        "Stop Doing": ""
+    };
+    
+    const sections = analysisText.split('\n\n');
+
+    sections.forEach(section => {
+        const lines = section.split('\n');
+        if (lines.length > 1) {
+            const category = lines[0].trim();
+            const analysis = lines.slice(1).join('\n').trim();
+            analysisObject[category] = analysis;
+        }
+    });
+
+    return analysisObject;
+}
 
 module.exports = {
     createSession,
