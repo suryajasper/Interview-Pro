@@ -1,16 +1,19 @@
 @font-face {
   font-family: "Satoshi";
   src: url("./fonts/Satoshi-Variable.ttf") format("truetype");
-  font-weight: 400; /* Regular */
+  font-weight: 400;
+  /* Regular */
   font-style: normal;
 }
 
 @font-face {
   font-family: "Satoshi";
   src: url("./fonts/Satoshi-VariableItalic.ttf") format("truetype");
-  font-weight: 400; /* Bold */
+  font-weight: 400;
+  /* Bold */
   font-style: italic;
 }
+
 .container {
   background-color: #000;
   width: 99.9vw;
@@ -22,6 +25,7 @@
   width: 100%;
   height: 100%;
 }
+
 .spline-cards {
   width: 100%;
   margin: -10px;
@@ -29,6 +33,7 @@
   z-index: 3;
   background: none;
 }
+
 .spline-cards-end {
   margin-top: -100%;
   position: absolute;
@@ -37,6 +42,7 @@
   background: none;
   transition: margin-top 5s ease-in, opacity 2s ease;
 }
+
 .btn {
   position: relative;
   width: 150px;
@@ -54,20 +60,25 @@
   margin-top: 70vh;
   margin-right: auto;
 }
+
 .btn-end {
   opacity: 0;
   margin-top: 0vh;
   transition: margin-top 2.5s ease-in, opacity 2s ease;
 }
+
 .btn:hover {
   background-color: azure;
 }
+
 .btn:hover h1 {
   color: #000;
 }
+
 .hidden {
   display: none;
 }
+
 .btn h1 {
   color: white;
   font-family: "Satoshi";
@@ -79,6 +90,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -89,6 +101,7 @@
     opacity: 0;
     top: 150%;
   }
+
   to {
     opacity: 1;
     top: 50%;
@@ -109,18 +122,22 @@
   animation: fadeInUp 2s ease-in forwards;
   transform: translate(-50%, -50%);
 }
+
 .upload-container .large-icon {
   margin-left: auto;
   margin-right: auto;
   width: 150px;
   margin-bottom: 10px;
 }
+
 .upload-container h1 {
   margin-bottom: 5px;
 }
+
 .upload-container p {
   margin-bottom: 35px;
 }
+
 .upload-container {
   justify-content: center;
   height: 100%;
@@ -164,6 +181,7 @@
   background-color: #ffffff;
   color: #000;
 }
+
 .upload-container .large-input {
   width: 90%;
   height: 200px;
@@ -179,9 +197,11 @@
   background-color: #0f0f0f;
   color: #ffffff;
 }
+
 .upload-container .large-input::placeholder {
   color: #9a9a9a;
 }
+
 .file-name {
   display: block;
   margin-top: 10px;
@@ -209,10 +229,12 @@
   transform: translate(-50%);
   transition: all 2s ease;
 }
+
 .ctn-btn:hover {
   background-color: #ffffff;
   color: #000;
 }
+
 .ctn-btn-hidden {
   border-radius: 20px;
   position: absolute;
@@ -232,4 +254,68 @@
   transform: translate(-50%);
   opacity: 0;
   transition: all 2s ease;
+}
+
+
+.header {
+  font-family: "Satoshi";
+  width: 100%;
+  height: 100px;
+  background-color: #000;
+  z-index: 1;
+  align-items: center;
+  text-align: center;
+  padding: 0 20px;
+  color: #fff;
+}
+
+.graph {
+  width: 90%;
+  height: 400px;
+  background: none;
+  margin-top: 30px;
+  margin-left: 5%;
+  margin-right: 5%;
+
+  border-radius: 20px;
+  border-color: #fff;
+  border-width: 10px;
+  box-shadow: 0px 0px 10px 10px #fff;
+  color: #fff;
+  border: solid;
+  justify-content: center;
+  text-align: center;
+  padding: 10px;
+}
+
+.gptFeedback {
+  display: inline-block;
+  width: 42.5%;
+  margin-left: 5%;
+  margin-right: 2.5%;
+  margin-top: 50px;
+  height: 400px;
+
+  border-radius: 20px;
+  border-color: #fff;
+  border-width: 10px;
+  box-shadow: 0px 0px 10px 10px #fff;
+  color: #fff;
+  border: solid;
+}
+
+.transcript {
+  display: inline-block;
+  width: 42.5%;
+  /* margin-right: 5%; */
+  margin-left: 2.5%;
+  margin-top: 50px;
+  height: 400px;
+
+  border-radius: 20px;
+  border-color: #fff;
+  border-width: 10px;
+  box-shadow: 0px 0px 10px 10px #fff;
+  color: #fff;
+  border: solid;
 }
