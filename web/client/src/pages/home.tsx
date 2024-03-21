@@ -2,6 +2,7 @@ import React from "react";
 import Spline, { SplineEvent } from "@splinetool/react-spline";
 import "../App.css";
 import resume from "../assets";
+import parseResume from "../utils/resumeParser";
 
 interface HomeProps {}
 interface HomeState {
@@ -11,6 +12,7 @@ interface HomeState {
   fileName: string;
   uploadShow: boolean;
   jobDescription: string;
+  resumeContent: string;
 }
 
 class Home extends React.Component<HomeProps, HomeState> {
@@ -23,10 +25,20 @@ class Home extends React.Component<HomeProps, HomeState> {
       uploadShow: false,
       fileName: "",
       jobDescription: "",
+      resumeContent: "",
     };
   }
   handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files ? event.target.files[0] : null;
+
+    if (file) {
+      parseResume(file)
+        .then((content : string) => {
+          this.setState({ resumeContent: content });
+        })
+        .catch(console.error);
+    }
+
     this.setState({
       fileName: file ? file.name : "No file chosen",
     });
@@ -97,7 +109,7 @@ class Home extends React.Component<HomeProps, HomeState> {
           </div>
           <button
             className={
-              this.state.fileName != "" && this.state.jobDescription != ""
+              this.state.fileName && this.state.resumeContent && this.state.jobDescription
                 ? "ctn-btn"
                 : "ctn-btn-hidden"
             }>
