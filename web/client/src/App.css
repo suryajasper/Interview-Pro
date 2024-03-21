@@ -4,7 +4,31 @@
   font-weight: 400; /* Regular */
   font-style: normal;
 }
-
+.row {
+  --bs-gutter-x: 1.5rem;
+  --bs-gutter-y: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: calc(-1 * var(--bs-gutter-y));
+  margin-right: calc(-0.5 * var(--bs-gutter-x));
+  margin-left: calc(-0.5 * var(--bs-gutter-x));
+}
+.col {
+  flex: 1 0 0%;
+}
+body {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+h1 {
+  font-family: "Satoshi";
+  font-size: 25px;
+  color: #fff;
+  text-align: center;
+}
 @font-face {
   font-family: "Satoshi";
   src: url("./fonts/Satoshi-VariableItalic.ttf") format("truetype");
@@ -15,16 +39,45 @@
   background-color: #000;
   width: 99.9vw;
   height: 99.9vh;
+  overflow: hidden;
 }
 
+.btn {
+  position: relative;
+  width: auto;
+  cursor: pointer;
+  z-index: 2;
+  color: rgba(255, 255, 255, 0.7);
+  background: none;
+  border-width: 2px;
+  border-radius: 20px;
+  border: solid;
+  justify-content: center;
+  text-align: center;
+  display: flex;
+  height: 50px;
+  padding: auto;
+}
+.btn:hover {
+  background-color: azure;
+}
+.btn:hover h1 {
+  color: #000;
+}
+
+.btn h1 {
+  color: white;
+  font-family: "Satoshi";
+  font-size: 18px;
+}
 .ab {
   position: absolute;
   width: 100%;
   height: 100%;
+  overflow: hidden;
 }
 .spline-cards {
   width: 100%;
-  margin: -10px;
   position: absolute;
   z-index: 3;
   background: none;
@@ -32,12 +85,12 @@
 .spline-cards-end {
   margin-top: -100%;
   position: absolute;
-  z-index: 3;
+  z-index: 30;
   opacity: 0;
   background: none;
   transition: margin-top 5s ease-in, opacity 2s ease;
 }
-.btn {
+.start-btn {
   position: relative;
   width: 150px;
   cursor: pointer;
@@ -54,25 +107,26 @@
   margin-top: 70vh;
   margin-right: auto;
 }
-.btn-end {
+.start-btn-end {
   opacity: 0;
   margin-top: 0vh;
   transition: margin-top 2.5s ease-in, opacity 2s ease;
 }
-.btn:hover {
+.start-btn:hover {
   background-color: azure;
 }
-.btn:hover h1 {
+.start-btn:hover h1 {
   color: #000;
 }
-.hidden {
-  display: none;
-}
-.btn h1 {
+
+.start-btn h1 {
   color: white;
   font-family: "Satoshi";
   margin-top: 13px;
   font-size: 18px;
+}
+.hidden {
+  display: none;
 }
 
 @keyframes fadeIn {
@@ -97,7 +151,7 @@
 
 .center-container {
   width: 850px;
-  height: 500px;
+  height: calc(49.9vh + 330px);
   position: absolute;
   margin-top: -40px;
   display: flex;
@@ -107,7 +161,8 @@
   opacity: 1;
   z-index: 10;
   animation: fadeInUp 2s ease-in forwards;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -272px);
+  overflow: hidden;
 }
 .upload-container .large-icon {
   margin-left: auto;
@@ -123,7 +178,7 @@
 }
 .upload-container {
   justify-content: center;
-  height: 100%;
+  height: 500px;
   border: solid;
   font-family: "Satoshi";
   font-weight: 700;
@@ -232,4 +287,158 @@
   transform: translate(-50%);
   opacity: 0;
   transition: all 2s ease;
+}
+
+/* chat page */
+
+.half-container-chat {
+  height: 99.9vh;
+  padding: 5vh 30px 5vh 30px;
+  max-width: 800px;
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+  opacity: 1;
+  z-index: 3;
+  background: none;
+  animation: fadeIn 2s ease-in forwards;
+  overflow: hidden;
+}
+.unity-container {
+  position: relative;
+  justify-content: center;
+  height: 32vh;
+  width: 48vh;
+  left: 50%;
+  top: 5vh;
+  transform: translate(-50%);
+  background: none;
+}
+
+.unity-inner {
+  padding: 10px;
+  background-color: #dddddd;
+  position: relative;
+  border-radius: 25px;
+  box-shadow: 0 0 20px 0 #380006;
+}
+
+.unity-component {
+  border-radius: 25px;
+  display: flex;
+  overflow: hidden;
+}
+
+.chat-inner {
+  position: relative;
+  display: flex;
+  flex-direction: column-reverse;
+  overflow-y: auto;
+  height: calc(80vh);
+  margin-top: 10px;
+  /*border: solid 2px rgba(255, 255, 255, 0.7);*/
+  background-color: none;
+  border-radius: 25px;
+}
+
+.chat-input-row {
+  display: flex;
+  justify-content: center;
+  flex-direction: row;
+}
+
+.send-button {
+  max-height: 50px;
+  font-size: 20px;
+  padding: 10px;
+}
+.chat-inner::-webkit-scrollbar {
+  display: none;
+}
+.input-field {
+  max-height: 50px;
+  font-size: 20px;
+  padding: 10px;
+}
+
+.chat-bubble {
+  background-color: #ffffff;
+  min-height: 60px;
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  justify-content: center;
+  padding: 5px 20px 0px 20px;
+  border-radius: 10px;
+  text-overflow: clip;
+  max-width: 600px;
+  animation: popup 0.6s ease forwards;
+  transition: scale 0.2s;
+}
+
+.chat-bubble:hover {
+  scale: 1.1;
+  transition: scale 0.5s;
+}
+
+.chat-bubble h2 {
+  font-family: "Satoshi";
+  font-size: 20px;
+  max-width: 550px;
+  white-space: normal;
+  word-wrap: break-word;
+}
+
+@keyframes popup {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) translateY(0px);
+  }
+  30% {
+    transform: translateY(-10px) scale(1.2);
+  }
+  50% {
+    opacity: 1;
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0px);
+  }
+}
+
+.chat-bubble img {
+  margin-top: 9px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.summary {
+  width: auto;
+  height: 30vh;
+  margin-left: auto;
+  margin-top: 10px;
+  font-family: monospace;
+  margin-bottom: 15px;
+  margin-right: auto;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  resize: vertical;
+  background-color: #0f0f0f;
+  color: #ffffff;
+  white-space: pre-line;
+  transition: all 0.4s ease;
+  overflow: scroll;
+}
+.summary::-webkit-scrollbar {
+  display: none;
+}
+.summary:hover {
+  scale: 1.3;
+  transform: translateY(-10%);
+  transition: all 1s ease;
 }

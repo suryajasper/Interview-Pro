@@ -1,7 +1,7 @@
 import React from "react";
 import Spline, { SplineEvent } from "@splinetool/react-spline";
 import "../App.css";
-import resume from "../assets";
+import { resume } from "../assets";
 import parseResume from "../utils/resumeParser";
 
 interface HomeProps {}
@@ -33,7 +33,7 @@ class Home extends React.Component<HomeProps, HomeState> {
 
     if (file) {
       parseResume(file)
-        .then((content : string) => {
+        .then((content: string) => {
           this.setState({ resumeContent: content });
         })
         .catch(console.error);
@@ -47,14 +47,20 @@ class Home extends React.Component<HomeProps, HomeState> {
     return (
       <div className="container">
         <Spline
-          scene="https://prod.spline.design/OjQhQUFdcO0kwRoW/scene.splinecode"
+          scene="https://draft.spline.design/R2C2nYGxTOk-hejn/scene.splinecode"
           className={
             this.state.splineShow ? "spline-cards" : "spline-cards-end"
           }
+          onMouseDown={(e: SplineEvent) => console.log(e.target)}
         />
-        <div className="ab" style={{ zIndex: this.state.ab }}>
+        <div className="ab">
           <div
-            className={this.state.startButtonShow ? "btn" : "btn btn-end"}
+            style={{ zIndex: this.state.ab }}
+            className={
+              this.state.startButtonShow
+                ? "start-btn"
+                : "start-btn start-btn-end"
+            }
             onClick={() => {
               this.setState({
                 splineShow: false,
@@ -107,14 +113,18 @@ class Home extends React.Component<HomeProps, HomeState> {
                 this.setState({ jobDescription: e.target.value });
               }}></textarea>
           </div>
-          <button
-            className={
-              this.state.fileName && this.state.resumeContent && this.state.jobDescription
-                ? "ctn-btn"
-                : "ctn-btn-hidden"
-            }>
-            Start Chatting
-          </button>
+          <a href="/chat">
+            <button
+              className={
+                this.state.fileName &&
+                this.state.resumeContent &&
+                this.state.jobDescription
+                  ? "ctn-btn"
+                  : "ctn-btn-hidden"
+              }>
+              Start Chatting
+            </button>
+          </a>
         </div>
 
         <Spline
