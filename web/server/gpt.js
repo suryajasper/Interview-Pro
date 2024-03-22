@@ -21,13 +21,17 @@ function getAnalysisPrompt() {
 
 const conversations = {};
 
-async function createSession() {
+async function createSession(jobDescription, resumeContent) {
+    let startContent = `${getStartingPrompt()}\n` + 
+        `Here is the candidate's resume:\n${resumeContent} \n\n` + 
+        `Here is the description of the job the candidate is interviewing for: ${jobDescription}`;
+
     const response = await axios.post(GPT_API_URL, {
         model: "gpt-3.5-turbo",
         messages: [
             {
                 role: "system",
-                content: getStartingPrompt(),
+                content: startContent,
             }
         ]
     }, {
@@ -38,22 +42,19 @@ async function createSession() {
     });
 
     let sessionId = response.data.id;
+    let startingPrompt = {
+        role: "system",
+        content: startContent,
+    }
 
-    conversations[sessionId] = [
-        {
-            role: "system",
-            content: getStartingPrompt(),
-        }
-    ];
-
-    return sessionId;
+    return { sessionId, startingPrompt };
 }
 
-async function getResponse(sessionId, userMessage) {
+async function getResponse(userMessage, convHistory) {
     const response = await axios.post(GPT_API_URL, {
         model: "gpt-3.5-turbo",
         messages: [
-            ...conversations[sessionId],
+            ...convHistory,
             {
                 role: "user",
                 content: userMessage,

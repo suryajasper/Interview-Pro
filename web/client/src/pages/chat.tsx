@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import axios from 'axios';
 import { useParams } from "react-router-dom";
 import Spline, { SplineEvent } from "@splinetool/react-spline";
 import "../App.css";
@@ -15,9 +16,45 @@ const Chat = () => {
     {
       position: "left",
       title: "Kiyo",
-      text: "Ask me anything!",
+      text: "Hello I am Kiyo, your AI mock interview assistant. Nice to meet you!",
     },
   ]);
+
+  const getGptResponse = async (userMessage: string) => {
+    try {
+      const postRes = await axios.post("http://localhost:6969/getResponse", { sessionId, userMessage, });
+      const gptResponse = postRes.data.response as string;
+      return gptResponse;
+    }
+    catch (error) {
+      console.error('Error getting GPT response: ', error);
+    }
+  }
+
+  useEffect(() => {
+    if (chatMessages.length === 0) return;
+
+    let lastMessage = chatMessages[chatMessages.length-1];
+
+    if (lastMessage.title === "User") {
+      console.log('requesting GPT response');
+
+      getGptResponse(lastMessage.text)
+        .then((gptResponse) => {          
+          console.log('received GPT response:', gptResponse);
+
+          setChatMessages((prevState) => [
+            ...prevState,
+            {
+              position: "left",
+              title: "Kiyo",
+              text: gptResponse || 'ERROR: Failed to get GPT Response',
+            },
+          ]);
+        })
+        .catch(console.error);
+    }
+  }, [chatMessages]);
  
   const addSelfMsg = (text: string) => {
     setChatMessages((prevState) => [
@@ -44,6 +81,8 @@ const Chat = () => {
   };
 
   const handleChat = () => {
+    if (!textInput) return;
+    
     setChatMessages((prevState) => [
       ...prevState,
       {
@@ -52,6 +91,7 @@ const Chat = () => {
         text: textInput,
       },
     ]);
+
     setTextInput("");
   };
 
