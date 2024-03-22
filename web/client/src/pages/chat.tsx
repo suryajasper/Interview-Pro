@@ -10,6 +10,8 @@ import { Session } from "../types/dbTypes";
 
 interface ChatProps {}
 
+let fetchedConv = false;
+
 const Chat = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
   console.log(sessionId);
@@ -52,18 +54,29 @@ const Chat = () => {
 
   useEffect(() => {
     if (chatMessages.length <= 1) {
+      if (fetchedConv)
+        return;
+
       getSessionData()
         .then(session => {
-          if (!session)
+          fetchedConv = true;
+
+          if (!session || session.conversation.length <= 1)
             return;
           
-          let history = session.conversation.slice(1).map(msg => ({ 
+          const history = session.conversation.slice(1).map(msg => ({ 
             position: msg.role == 'system' ? 'left' : 'right',
             title: msg.role == 'system' ? 'Kiyo' : 'User',
             text: msg.content,
           }) as IChatMessage);
 
-          setChatMessages((prevState) => history);
+          const starfish : IStarfish = {
+            overall: session.starfishResults.sum.map(sum => sum / session.starfishResults.count),
+            last: [0, 0, 0, 0, 0],
+          }
+
+          setChatMessages(_ => history);
+          setStarfish(_ => starfish)
         })
 
       return;

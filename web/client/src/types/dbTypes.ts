@@ -4,16 +4,14 @@ export interface Session {
     conversation: [{
         role: string,
         content: string,
+        quality: number,
     }],
     summary: string,
     jobDescription: string,
     resumeContent: string,
-    starfish:{
-        moreOf: string,
-        keepDoing: string,
-        lessOf: string,
-        stopDoing: string,
-        startDoing: string
+    starfishResults: {
+        count: number,
+        sum: number[],
     }
 };
 
