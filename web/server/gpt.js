@@ -88,17 +88,15 @@ async function getStarfishEvaluation(convHistory) {
 }
 
 async function getResponse(userMessage, convHistory) {
-    let newHistory = [
-        ...convHistory,
-        {
-            role: "user",
-            content: userMessage,
-        }
-    ];
-
     const response = await axios.post(GPT_API_URL, {
         model: "gpt-3.5-turbo",
-        messages: newHistory,
+        messages: [
+            ...convHistory,
+            {
+                role: "user",
+                content: userMessage,
+            }
+        ],
     }, {
         headers: {
             'Content-Type': 'application/json',
@@ -106,7 +104,13 @@ async function getResponse(userMessage, convHistory) {
         }
     });
 
-    const starfish = await getStarfishEvaluation(newHistory);
+    const starfish = await getStarfishEvaluation([
+        ...convHistory,
+        {
+            role: "user (last message)",
+            content: userMessage,
+        }
+    ]);
     const gptResponse = response.data.choices[0].message.content;
 
     return {

@@ -9,6 +9,7 @@ export interface IChatMessage {
   text: string;
   avatar?: string;
   inProgress?: boolean;
+  requestedResponse?: boolean;
 }
 interface ChatboxProps {
   messages: IChatMessage[];

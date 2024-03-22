@@ -62,6 +62,9 @@ const Chat = () => {
         starfish: postRes.data.starfish as IStarfish,
       };
     }
+    catch (error) {
+      console.error('Error getting GPT response: ', error);
+    }
   };
 
   const getSessionData = async () => {
@@ -80,7 +83,7 @@ const Chat = () => {
       return res.data;
     }
     catch (error) {
-      console.error('Error getting session data: ', error);
+      console.error('Error getting analysis data: ', error);
     }
   }
 
@@ -145,8 +148,9 @@ const Chat = () => {
     if (lastMessage.inProgress)
       return;
 
-    if (lastMessage.title === "User") {
+    if (lastMessage.title === "User" && !lastMessage.requestedResponse) {
       console.log("requesting GPT response");
+      lastMessage.requestedResponse = true;
 
       getGptResponse(lastMessage.text)
         .then((res) => {          
@@ -171,6 +175,8 @@ const Chat = () => {
               text: gptResponse || "ERROR: Failed to get GPT Response",
             },
           ]);
+
+          sendAudio(gptResponse);
 
           setStarfish(_ => starfish);
 
@@ -206,6 +212,7 @@ const Chat = () => {
   };
   
   const sendAudio = (text: string) => {
+    setIsTalking(_ => true);
     audioGen(text)
       .then((audio) => {
         sendMessage("Lipsync", "ReceiveAudio", JSON.stringify(audio));
@@ -224,9 +231,10 @@ const Chat = () => {
   };
   
   const fetchUnityData = (key: string, value: any) => {
-    console.log(isTalking);
+    console.log(`unity response: ${key}=${value}`);
     eval(key)(value);
-    console.log(isTalking);
+    if (key === "setIsTalking")
+      setIsTalking(_ => value as boolean);
   };
   const handleChat = () => {
     if (!textInput) return;
@@ -287,7 +295,7 @@ const Chat = () => {
             style={{
               marginTop: 20,
               maxHeight: 100,
-              visibility: (browserSupportsSpeechRecognition && !interviewOver) ? 'visible' : 'hidden',
+              visibility: (browserSupportsSpeechRecognition && !interviewOver && !isTalking) ? 'visible' : 'hidden',
             }}
             onMouseDown={(e: SplineEvent) => {
               console.log('MOUSE_DOWN', listening, transcript);
@@ -295,16 +303,15 @@ const Chat = () => {
                 if (listening) {
                   console.log('stopped listening');
                   SpeechRecognition.stopListening();
-                  resetTranscript();
                 }
                 else {
                   console.log('started listening');
+                  resetTranscript();
                   SpeechRecognition.startListening({ continuous: true });
                 }
               } else {
                 console.log('stopped listening');
                 SpeechRecognition.stopListening();
-                resetTranscript();
               }
             }}
           />
@@ -320,7 +327,7 @@ const Chat = () => {
               <div className="chat-input-row">
                 <div className="chat-input-container">
                   <input
-                    disabled={listening || interviewOver}
+                    disabled={listening || interviewOver || isTalking}
                     className="input-field"
                     type="text"
                     value={textInput}
@@ -329,10 +336,10 @@ const Chat = () => {
                   />
                 </div>
                 <div className="chat-button-row">
-                  <button disabled={listening || interviewOver} className="btn" onClick={handleChat}>
+                  <button disabled={listening || interviewOver || isTalking} className="btn" onClick={handleChat}>
                     <h1>Send</h1>
                   </button>
-                  <button disabled={listening || interviewOver} className="btn" onClick={endInterview}>
+                  <button disabled={listening || interviewOver || isTalking} className="btn" onClick={endInterview}>
                     <h1>End</h1>
                   </button>
                 </div>
