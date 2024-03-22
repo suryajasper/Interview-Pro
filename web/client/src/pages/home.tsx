@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Spline, { SplineEvent } from "@splinetool/react-spline";
 import axios from "axios";
+
+import { Session } from '../types/dbTypes';
 import { resume } from "../assets";
 import parseResume from "../utils/resumeParser";
 
