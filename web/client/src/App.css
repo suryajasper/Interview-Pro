@@ -401,7 +401,8 @@ h1 {
   border: 2px solid rgba(255, 255, 255, 0.2);
 }
 
-.chat-bubble {
+.chat-bubble-left,
+.chat-bubble-right {
   background-color: #ffffff;
   min-height: 60px;
   display: flex;
@@ -421,7 +422,13 @@ h1 {
   transition: scale 0.5s;
 } */
 
-.chat-bubble h2 {
+.chat-bubble-right:hover {
+  scale: 1.1;
+  transition: all 0.5s;
+}
+
+.chat-bubble-left h2,
+.chat-bubble-right h2 {
   font-family: "Satoshi";
   font-size: 17px;
   max-width: 550px;
@@ -449,7 +456,8 @@ h1 {
   }
 }
 
-.chat-bubble img {
+.chat-bubble-left img,
+.chat-bubble-right img {
   margin-top: 9px;
   width: 40px;
   height: 40px;
