@@ -24,6 +24,10 @@ function getAnalysisPrompt() {
     return fs.readFileSync(ANALYSIS_PROMPT_PATH, 'utf8').trim();
 }
 
+function stringifyHistory(convHistory) {
+    return convHistory.map(({role, content}) => `${role}: ${content}`).join('\n');
+} 
+
 const conversations = {};
 
 async function createSession(jobDescription, resumeContent) {
@@ -57,7 +61,7 @@ async function createSession(jobDescription, resumeContent) {
 
 async function getStarfishEvaluation(convHistory) {
     try {
-        let convString = convHistory.map(({role, content}) => `${role}: ${content}`).join('\n');
+        let convString = stringifyHistory(convHistory);
     
         const evaluation = await axios.post(GPT_API_URL, {
             model: "gpt-3.5-turbo",
@@ -84,15 +88,17 @@ async function getStarfishEvaluation(convHistory) {
 }
 
 async function getResponse(userMessage, convHistory) {
+    let newHistory = [
+        ...convHistory,
+        {
+            role: "user",
+            content: userMessage,
+        }
+    ];
+
     const response = await axios.post(GPT_API_URL, {
         model: "gpt-3.5-turbo",
-        messages: [
-            ...convHistory,
-            {
-                role: "user",
-                content: userMessage,
-            }
-        ]
+        messages: newHistory,
     }, {
         headers: {
             'Content-Type': 'application/json',
@@ -100,7 +106,7 @@ async function getResponse(userMessage, convHistory) {
         }
     });
 
-    const starfish = await getStarfishEvaluation(convHistory);
+    const starfish = await getStarfishEvaluation(newHistory);
     const gptResponse = response.data.choices[0].message.content;
 
     return {
@@ -113,16 +119,15 @@ async function getTranscript(sessionId) {
     return conversations[sessionId];
 }
 
-async function getAnalysis(sessionId) {
+async function getAnalysis(convHistory) {
     const response = await axios.post(GPT_API_URL, {
         model: "gpt-3.5-turbo",
         messages: [
-            ...conversations[sessionId],
             {
-                role: "user",
-                content: getAnalysisPrompt(),
-            }
-        ]
+                role: "system",
+                content: getAnalysisPrompt() + '\n' + stringifyHistory(convHistory),
+            },
+        ],
     }, {
         headers: {
             'Content-Type': 'application/json',
@@ -130,33 +135,8 @@ async function getAnalysis(sessionId) {
         }
     });
     
-    let analysisText = response.data.choices[0].message.content;
-    let analysisObj = parseAnalysisText(analysisText);
-    
-    return analysisObj;
-}
-
-function parseAnalysisText(analysisText) {
-    const analysisObject = {
-        "Start Doing": "",
-        "Try to Do More of": "",
-        "Keep Doing": "",
-        "Do Less of": "",
-        "Stop Doing": ""
-    };
-    
-    const sections = analysisText.split('\n\n');
-
-    sections.forEach(section => {
-        const lines = section.split('\n');
-        if (lines.length > 1) {
-            const category = lines[0].trim();
-            const analysis = lines.slice(1).join('\n').trim();
-            analysisObject[category] = analysis;
-        }
-    });
-
-    return analysisObject;
+    const analysisText = response.data.choices[0].message.content;
+    return analysisText;
 }
 
 module.exports = {
