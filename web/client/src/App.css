@@ -442,3 +442,9 @@ h1 {
   transform: translateY(-10%);
   transition: all 1s ease;
 }
+
+.flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

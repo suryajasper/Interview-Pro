@@ -46,8 +46,9 @@ app.post('/getResponse', async (req, res) => {
         const convHistory = sessionDoc.conversation.map(({ role, content }) => ({role, content}));
         console.log(`POST /getResponse - Loaded Conversation History: ${convHistory.length} messages`);
         
-        const gptResponse = await gpt.getResponse(userMessage, convHistory);
+        const { starfish, gptResponse } = await gpt.getResponse(userMessage, convHistory);
         console.log(`POST /getResponse - Successfully produced GPT: ${gptResponse}`);
+        console.log(`POST /getResponse - Successfully produced starfish: ${starfish}`);
         
         let convAddition = [
             { role: "user", content: userMessage },
@@ -57,10 +58,24 @@ app.post('/getResponse', async (req, res) => {
             $push: { conversation: { $each: convAddition } }
         }).exec();
         console.log(`POST /getResponse - Successfully updated conversation in database`);
-
-        res.json({ response: gptResponse });
+        
+        res.json({ starfish, gptResponse });
     } catch (error) {
         console.error(`POST /getResponse - Error ${error}`)
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/session', async (req, res) => {
+    const { sessionId } = req.query;
+    try {
+        console.log(`GET /session - Received SessionId=${sessionId}`);
+        const sessionDoc = await Session.findOne({ sessionId }).exec();
+        console.log(`GET /session - Successfully retrieved session information`);
+
+        res.json(sessionDoc);
+    } catch (error) {
+        console.error(`GET /session - Error ${error}`)
         res.status(500).json({ error: error.message });
     }
 });
