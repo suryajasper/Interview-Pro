@@ -55,19 +55,17 @@ export const Chatbox: React.FC<ChatboxProps> = ({ messages }) => {
               justifyContent: message.position,
               padding: 20,
             }}>
-            <div className="chat-bubble">
-              {message.position === "left" ? (
-                <>
-                  <img src={me} />
-                  <h2>{breakText(message.text)}</h2>
-                </>
-              ) : (
-                <>
-                  <h2>{breakText(message.text)}</h2>
-                  <img src={user} />
-                </>
-              )}
-            </div>
+            {message.position === "left" ? (
+              <div className="chat-bubble-left">
+                <img src={me} />
+                <h2>{breakText(message.text)}</h2>
+              </div>
+            ) : (
+              <div className="chat-bubble-right">
+                <h2>{breakText(message.text)}</h2>
+                <img src={user} />
+              </div>
+            )}
           </div>
         );
       })}

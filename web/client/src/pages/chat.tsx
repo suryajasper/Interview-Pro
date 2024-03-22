@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+
+import React, { useEffect, useState, useRef } from "react";
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import axios from 'axios';
 import { useParams } from "react-router-dom";
@@ -6,10 +7,17 @@ import Spline, { SplineEvent } from "@splinetool/react-spline";
 import "../App.css";
 import Avatar from "../components/avatar";
 import { IChatMessage, Chatbox } from "../components/chatbox";
+import { audioGen } from "../utils/audiogen";
 import { IStarfish, StarfishDiagram } from "../components/starfish";
 import { Session } from "../types/dbTypes";
 
-interface ChatProps {}
+interface AvatarRef {
+  sendUnityMessage(
+    gameObject: string,
+    methodName: string,
+    value: string | undefined
+  ): void;
+}
 
 const MAX_SPEECH_TIME_IN_SECONDS = 45;
 
@@ -18,6 +26,11 @@ let chatTerminationTimeout : ReturnType<typeof setTimeout>;
 
 const Chat = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
+  
+  const [isTalking, setIsTalking] = useState(true);
+  const avatarRef = useRef<AvatarRef>(null);
+  console.log(sessionId);
+  
   const [textInput, setTextInput] = useState<string>("");
   const [interviewOver, setInterviewOver] = useState<boolean>(false);
   const [starfishValues, setStarfish] = useState<IStarfish>({
@@ -32,6 +45,7 @@ const Chat = () => {
       text: "Hello I am Kiyo, your AI mock interview assistant. Nice to meet you!",
     },
   ]);
+  
   const {
     transcript,
     listening,
@@ -48,10 +62,7 @@ const Chat = () => {
         starfish: postRes.data.starfish as IStarfish,
       };
     }
-    catch (error) {
-      console.error('Error getting GPT response: ', error);
-    }
-  }
+  };
 
   const getSessionData = async () => {
     try {
@@ -135,7 +146,7 @@ const Chat = () => {
       return;
 
     if (lastMessage.title === "User") {
-      console.log('requesting GPT response');
+      console.log("requesting GPT response");
 
       getGptResponse(lastMessage.text)
         .then((res) => {          
@@ -157,7 +168,7 @@ const Chat = () => {
             {
               position: "left",
               title: "Kiyo",
-              text: gptResponse || 'ERROR: Failed to get GPT Response',
+              text: gptResponse || "ERROR: Failed to get GPT Response",
             },
           ]);
 
@@ -169,7 +180,7 @@ const Chat = () => {
         .catch(console.error);
     }
   }, [chatMessages]);
- 
+
   const addSelfMsg = (text: string) => {
     setChatMessages((prevState) => [
       ...prevState,
@@ -193,10 +204,33 @@ const Chat = () => {
       },
     ]);
   };
-
+  
+  const sendAudio = (text: string) => {
+    audioGen(text)
+      .then((audio) => {
+        sendMessage("Lipsync", "ReceiveAudio", JSON.stringify(audio));
+      })
+      .catch((err) => {
+        console.error("Error generating audio:", err);
+      });
+  };
+  
+  const sendMessage = (
+    object: string,
+    func: string,
+    value: string | undefined = undefined
+  ) => {
+    avatarRef.current?.sendUnityMessage(object, func, value);
+  };
+  
+  const fetchUnityData = (key: string, value: any) => {
+    console.log(isTalking);
+    eval(key)(value);
+    console.log(isTalking);
+  };
   const handleChat = () => {
     if (!textInput) return;
-    
+
     setChatMessages((prevState) => [
       ...prevState,
       {
@@ -244,7 +278,7 @@ const Chat = () => {
           <div className="unity-container">
             <div className="unity-inner">
               <div className="unity-component">
-                <Avatar />
+                <Avatar ref={avatarRef} callback={fetchUnityData} />
               </div>
             </div>
           </div>
