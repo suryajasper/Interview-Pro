@@ -8,6 +8,7 @@ export interface IChatMessage {
   title: string;
   text: string;
   avatar?: string;
+  inProgress?: boolean;
 }
 interface ChatboxProps {
   messages: IChatMessage[];
@@ -15,6 +16,25 @@ interface ChatboxProps {
 
 export const Chatbox: React.FC<ChatboxProps> = ({ messages }) => {
   const messageListReference = useRef<HTMLDivElement>(null);
+
+  const breakText = (text: string) => {
+    const boldRegex = /(?:<b>(.*?)<\/b>)|(?:\*\*(.*?)\*\*)/g;
+  
+    const parts = text.split('\n').map((line, index) => (
+      <React.Fragment key={index}>
+        {line.split(boldRegex).map((part, index) =>
+          boldRegex.test(part) ? (
+            <strong key={index}>{part.replace(/<\/?b>/g, '')}</strong>
+          ) : (
+            part
+          )
+        )}
+        <br />
+      </React.Fragment>
+    ));
+  
+    return parts;
+  };
 
   return (
     <div
@@ -38,11 +58,11 @@ export const Chatbox: React.FC<ChatboxProps> = ({ messages }) => {
             {message.position === "left" ? (
               <div className="chat-bubble-left">
                 <img src={me} />
-                <h2>{message.text}</h2>
+                <h2>{breakText(message.text)}</h2>
               </div>
             ) : (
               <div className="chat-bubble-right">
-                <h2>{message.text}</h2>
+                <h2>{breakText(message.text)}</h2>
                 <img src={user} />
               </div>
             )}

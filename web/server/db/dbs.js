@@ -1,7 +1,6 @@
 
 const { MongoClient, ServerApiVersion } = require('mongodb');
 const mongoose = require('mongoose');
-const Message = require('./message');
 const uri = "mongodb+srv://georgemathew9203:0ffZ6ZrUyAZlyJZW@podiumpalcluster.ufcozb6.mongodb.net/?retryWrites=true&w=majority";
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -45,4 +44,4 @@ async function closeMongoConnection() {
   }
 }
 
-module.exports = { connectToMongo, closeMongoConnection, Message };
+module.exports = { connectToMongo, closeMongoConnection };

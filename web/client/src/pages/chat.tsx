@@ -1,11 +1,15 @@
+
 import React, { useEffect, useState, useRef } from "react";
-import axios from "axios";
+import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
+import axios from 'axios';
 import { useParams } from "react-router-dom";
 import Spline, { SplineEvent } from "@splinetool/react-spline";
 import "../App.css";
 import Avatar from "../components/avatar";
 import { IChatMessage, Chatbox } from "../components/chatbox";
 import { audioGen } from "../utils/audiogen";
+import { IStarfish, StarfishDiagram } from "../components/starfish";
+import { Session } from "../types/dbTypes";
 
 interface AvatarRef {
   sendUnityMessage(
@@ -15,12 +19,25 @@ interface AvatarRef {
   ): void;
 }
 
+const MAX_SPEECH_TIME_IN_SECONDS = 45;
+
+let fetchedConv = false;
+let chatTerminationTimeout : ReturnType<typeof setTimeout>;
+
 const Chat = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
+  
   const [isTalking, setIsTalking] = useState(true);
   const avatarRef = useRef<AvatarRef>(null);
   console.log(sessionId);
+  
   const [textInput, setTextInput] = useState<string>("");
+  const [interviewOver, setInterviewOver] = useState<boolean>(false);
+  const [starfishValues, setStarfish] = useState<IStarfish>({
+    overall: [0, 0, 0, 0, 0],
+    last: [0, 0, 0, 0, 0],
+  });
+  const starfishAttributes = [ "Clarity", "Relevance", "Depth of understanding", "Critical Thinking", "Communication", ];
   const [chatMessages, setChatMessages] = useState<IChatMessage[]>([
     {
       position: "left",
@@ -28,37 +45,123 @@ const Chat = () => {
       text: "Hello I am Kiyo, your AI mock interview assistant. Nice to meet you!",
     },
   ]);
-  const sendMessage = (
-    object: string,
-    func: string,
-    value: string | undefined = undefined
-  ) => {
-    avatarRef.current?.sendUnityMessage(object, func, value);
-  };
+  
+  const {
+    transcript,
+    listening,
+    resetTranscript,
+    browserSupportsSpeechRecognition,
+    isMicrophoneAvailable,
+  } = useSpeechRecognition();
+
   const getGptResponse = async (userMessage: string) => {
     try {
-      const postRes = await axios.post("http://localhost:6969/getResponse", {
-        sessionId,
-        userMessage,
-      });
-      const gptResponse = postRes.data.response as string;
-      return gptResponse;
-    } catch (error) {
-      console.error("Error getting GPT response: ", error);
+      const postRes = await axios.post("http://localhost:6969/getResponse", { sessionId, userMessage, });
+      return { 
+        gptResponse: postRes.data.gptResponse as string, 
+        starfish: postRes.data.starfish as IStarfish,
+      };
     }
   };
 
-  useEffect(() => {
-    if (chatMessages.length === 0) return;
+  const getSessionData = async () => {
+    try {
+      const res = await axios.get<Session | undefined>(`http://localhost:6969/session?sessionId=${sessionId}`);
+      return res.data;
+    }
+    catch (error) {
+      console.error('Error getting session data: ', error);
+    }
+  }
 
-    let lastMessage = chatMessages[chatMessages.length - 1];
+  const getAnalysis = async () => {
+    try {
+      const res = await axios.get<{analysis: string}>(`http://localhost:6969/getAnalysis?sessionId=${sessionId}`);
+      return res.data;
+    }
+    catch (error) {
+      console.error('Error getting session data: ', error);
+    }
+  }
+
+  const endInterview = () => {
+    setInterviewOver(_ => true);
+
+    getAnalysis()
+      .then(res => {
+        if (!res)
+          return;
+
+        setChatMessages(prevState => [
+          ...prevState,
+          {
+            position: "left",
+            title: "Kiyo",
+            text: res.analysis || 'ERROR: Failed to get analysis',
+          },
+        ])
+      })
+      .catch(console.error)
+  }
+
+  useEffect(() => {
+    if (chatMessages.length > 0)
+      console.log('UPDATE TO CONVERSATION', listening, chatMessages[chatMessages.length-1]);
+    if (listening)
+      return;
+
+    if (chatMessages.length <= 1) {
+      if (fetchedConv)
+        return;
+
+      getSessionData()
+        .then(session => {
+          fetchedConv = true;
+
+          if (!session || session.conversation.length <= 1) {
+            setTextInput(_ => "Hi my name is __name__. I'm ready to begin!");
+            return;
+          }
+          
+          const history = session.conversation.slice(1).map(msg => ({ 
+            position: msg.role == 'system' ? 'left' : 'right',
+            title: msg.role == 'system' ? 'Kiyo' : 'User',
+            text: msg.content,
+          }) as IChatMessage);
+
+          const starfish : IStarfish = {
+            overall: session.starfishResults.sum.map(sum => sum / session.starfishResults.count),
+            last: [0, 0, 0, 0, 0],
+          }
+
+          setChatMessages(_ => history);
+          setStarfish(_ => starfish)
+        })
+
+      return;
+    }
+
+    let lastMessage = chatMessages[chatMessages.length-1];
+    if (lastMessage.inProgress)
+      return;
 
     if (lastMessage.title === "User") {
       console.log("requesting GPT response");
 
       getGptResponse(lastMessage.text)
-        .then((gptResponse) => {
-          console.log("received GPT response:", gptResponse);
+        .then((res) => {          
+          if (!res)
+            return;
+
+          let { gptResponse, starfish } = res;
+          console.log('received GPT response:', gptResponse);
+          console.log('received starfish values:', starfish);
+
+          let ending = false;
+          if (gptResponse.includes('<end_interview>')) {
+            ending = true;
+            gptResponse = gptResponse.replaceAll('<end_interview>', '');
+          }
 
           setChatMessages((prevState) => [
             ...prevState,
@@ -68,6 +171,11 @@ const Chat = () => {
               text: gptResponse || "ERROR: Failed to get GPT Response",
             },
           ]);
+
+          setStarfish(_ => starfish);
+
+          if (ending)
+            endInterview();
         })
         .catch(console.error);
     }
@@ -96,6 +204,7 @@ const Chat = () => {
       },
     ]);
   };
+  
   const sendAudio = (text: string) => {
     audioGen(text)
       .then((audio) => {
@@ -105,6 +214,15 @@ const Chat = () => {
         console.error("Error generating audio:", err);
       });
   };
+  
+  const sendMessage = (
+    object: string,
+    func: string,
+    value: string | undefined = undefined
+  ) => {
+    avatarRef.current?.sendUnityMessage(object, func, value);
+  };
+  
   const fetchUnityData = (key: string, value: any) => {
     console.log(isTalking);
     eval(key)(value);
@@ -124,6 +242,30 @@ const Chat = () => {
 
     setTextInput("");
   };
+
+  useEffect(() => {
+    console.log(`Transcript or listening update: transcript=${transcript}, listening=${listening}`)
+    setChatMessages((oldConv) => {
+      let conv = [...oldConv];
+
+      if (conv[conv.length-1].inProgress) {
+        if (listening)
+          conv[conv.length-1].text = transcript;
+        else
+          conv[conv.length-1].inProgress = false;
+      } 
+      else if (listening) {
+        conv.push({
+          position: 'right',
+          title: 'User',
+          text: transcript,
+          inProgress: true,
+        })
+      }
+
+      return conv;
+    });
+  }, [transcript, listening]);
 
   if (!sessionId) {
     return <p>Session ID is undefined. Please provide a valid session ID.</p>;
@@ -145,36 +287,29 @@ const Chat = () => {
             style={{
               marginTop: 20,
               maxHeight: 100,
+              visibility: (browserSupportsSpeechRecognition && !interviewOver) ? 'visible' : 'hidden',
             }}
             onMouseDown={(e: SplineEvent) => {
-              console.log(e.target);
+              console.log('MOUSE_DOWN', listening, transcript);
+              if (e.target.name == 'unmute') {
+                if (listening) {
+                  console.log('stopped listening');
+                  SpeechRecognition.stopListening();
+                  resetTranscript();
+                }
+                else {
+                  console.log('started listening');
+                  SpeechRecognition.startListening({ continuous: true });
+                }
+              } else {
+                console.log('stopped listening');
+                SpeechRecognition.stopListening();
+                resetTranscript();
+              }
             }}
           />
 
-          <div className="row" style={{ gap: 100 }}>
-            <div className="col" style={{ maxWidth: "300px" }}>
-              <h1>Objective</h1>
-              <div className="summary">
-                {`Systems Engineer role for Tesla Bot
-                    Focus on manufacturing processes and equipment development
-                    Collaborate in product lifecycle, from concept through production
-                    Requires new product launch and project leadership experience
-                    Role based in Palo Alto, CA; full-time position
-                    Offers competitive salary, benefits from day 1, including medical, dental, vision, 401(k), and stock purchase plans
-                    Salary range: $84,000 - $324,000 annually, plus benefits and stock awards`}
-              </div>
-            </div>
-            <div className="col" style={{ maxWidth: "300px" }}>
-              <h1>What We're Practicing</h1>
-              <div className="summary">{`Clearly articulating your thoughts.
-Asking clarifying questions.
-Structuring your answers logically.
-Showing enthusiasm and confidence.
-Managing your time effectively for each question.
-Demonstrating problem-solving skills.
-Expressing your interest in the role and company.`}</div>
-            </div>
-          </div>
+          <StarfishDiagram attributes={starfishAttributes} values={starfishValues}/>
         </div>
         <div className="half-container-chat col">
           <h1>Conversation</h1>
@@ -183,8 +318,9 @@ Expressing your interest in the role and company.`}</div>
             <div className="align-end">
               <Chatbox messages={chatMessages} />
               <div className="chat-input-row">
-                <div>
+                <div className="chat-input-container">
                   <input
+                    disabled={listening || interviewOver}
                     className="input-field"
                     type="text"
                     value={textInput}
@@ -192,9 +328,12 @@ Expressing your interest in the role and company.`}</div>
                     placeholder="Text Something..."
                   />
                 </div>
-                <div>
-                  <button className="btn" onClick={handleChat}>
+                <div className="chat-button-row">
+                  <button disabled={listening || interviewOver} className="btn" onClick={handleChat}>
                     <h1>Send</h1>
+                  </button>
+                  <button disabled={listening || interviewOver} className="btn" onClick={endInterview}>
+                    <h1>End</h1>
                   </button>
                 </div>
               </div>
