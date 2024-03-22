@@ -56,17 +56,23 @@ app.post('/getResponse', async (req, res) => {
 
         let count = starfishHistory.count;
         let sum = [0, 0, 0, 0, 0];
-        let average = [...starfish.last];
+        let average;
 
-        if (starfishHistory.count > 0 && starfishHistory.sum) {
-            for (let i = 0; i < 5; i++) {
-                sum[i] = starfish.last[i] + starfishHistory.sum[i];
-                average[i] = sum[i] / (starfishHistory.count+1);
+        if (sessionDoc.conversation.length > 1) {
+            average = [...starfish.last];
+    
+            if (starfishHistory.count > 0 && starfishHistory.sum) {
+                for (let i = 0; i < 5; i++) {
+                    sum[i] = starfish.last[i] + starfishHistory.sum[i];
+                    average[i] = sum[i] / (starfishHistory.count+1);
+                }
+            } else {
+                sum = [...starfish.last];
             }
+            count++;
         } else {
-            sum = [...starfish.last];
+            average = [0, 0, 0, 0, 0];
         }
-        count++;
 
         starfish.overall = average;
 
@@ -105,22 +111,19 @@ app.get('/session', async (req, res) => {
     }
 });
 
-app.get('/getAnalysis/:sessionId', async (req, res) => {
+app.get('/getAnalysis', async (req, res) => {
     const { sessionId } = req.params;
+    
     try {
-        const analysis = await gpt.getAnalysis(sessionId);
+        console.log(`GET /getAnalysis - Received SessionId=${sessionId}`);
+        const sessionDoc = await Session.findOne({ sessionId }).exec();
+        const convHistory = sessionDoc.conversation.map(({ role, content }) => ({role, content}));
+        
+        const analysis = await gpt.getAnalysis(convHistory);
+        console.log(`GET /getAnalysis - Successfully got analysis`);
         res.json({ analysis });
     } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-app.get('/getTranscript/:sessionId', async (req, res) => {
-    const { sessionId } = req.params;
-    try {
-        const transcript = await gpt.getTranscript(sessionId);
-        res.send(transcript);
-    } catch (error) {
+        console.error(`GET /getAnalysis - Error ${error}`)
         res.status(500).json({ error: error.message });
     }
 });

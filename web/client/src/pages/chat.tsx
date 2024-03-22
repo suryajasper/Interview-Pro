@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import axios from 'axios';
 import { useParams } from "react-router-dom";
 import Spline, { SplineEvent } from "@splinetool/react-spline";
@@ -10,12 +11,15 @@ import { Session } from "../types/dbTypes";
 
 interface ChatProps {}
 
+const MAX_SPEECH_TIME_IN_SECONDS = 45;
+
 let fetchedConv = false;
+let chatTerminationTimeout : ReturnType<typeof setTimeout>;
 
 const Chat = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
-  console.log(sessionId);
   const [textInput, setTextInput] = useState<string>("");
+  const [interviewOver, setInterviewOver] = useState<boolean>(false);
   const [starfishValues, setStarfish] = useState<IStarfish>({
     overall: [0, 0, 0, 0, 0],
     last: [0, 0, 0, 0, 0],
@@ -28,6 +32,13 @@ const Chat = () => {
       text: "Hello I am Kiyo, your AI mock interview assistant. Nice to meet you!",
     },
   ]);
+  const {
+    transcript,
+    listening,
+    resetTranscript,
+    browserSupportsSpeechRecognition,
+    isMicrophoneAvailable,
+  } = useSpeechRecognition();
 
   const getGptResponse = async (userMessage: string) => {
     try {
@@ -52,7 +63,42 @@ const Chat = () => {
     }
   }
 
+  const getAnalysis = async () => {
+    try {
+      const res = await axios.get<{analysis: string}>(`http://localhost:6969/getAnalysis?sessionId=${sessionId}`);
+      return res.data;
+    }
+    catch (error) {
+      console.error('Error getting session data: ', error);
+    }
+  }
+
+  const endInterview = () => {
+    setInterviewOver(_ => true);
+
+    getAnalysis()
+      .then(res => {
+        if (!res)
+          return;
+
+        setChatMessages(prevState => [
+          ...prevState,
+          {
+            position: "left",
+            title: "Kiyo",
+            text: res.analysis || 'ERROR: Failed to get analysis',
+          },
+        ])
+      })
+      .catch(console.error)
+  }
+
   useEffect(() => {
+    if (chatMessages.length > 0)
+      console.log('UPDATE TO CONVERSATION', listening, chatMessages[chatMessages.length-1]);
+    if (listening)
+      return;
+
     if (chatMessages.length <= 1) {
       if (fetchedConv)
         return;
@@ -61,8 +107,10 @@ const Chat = () => {
         .then(session => {
           fetchedConv = true;
 
-          if (!session || session.conversation.length <= 1)
+          if (!session || session.conversation.length <= 1) {
+            setTextInput(_ => "Hi my name is __name__. I'm ready to begin!");
             return;
+          }
           
           const history = session.conversation.slice(1).map(msg => ({ 
             position: msg.role == 'system' ? 'left' : 'right',
@@ -83,6 +131,8 @@ const Chat = () => {
     }
 
     let lastMessage = chatMessages[chatMessages.length-1];
+    if (lastMessage.inProgress)
+      return;
 
     if (lastMessage.title === "User") {
       console.log('requesting GPT response');
@@ -92,9 +142,15 @@ const Chat = () => {
           if (!res)
             return;
 
-          const { gptResponse, starfish } = res;
+          let { gptResponse, starfish } = res;
           console.log('received GPT response:', gptResponse);
           console.log('received starfish values:', starfish);
+
+          let ending = false;
+          if (gptResponse.includes('<end_interview>')) {
+            ending = true;
+            gptResponse = gptResponse.replaceAll('<end_interview>', '');
+          }
 
           setChatMessages((prevState) => [
             ...prevState,
@@ -106,6 +162,9 @@ const Chat = () => {
           ]);
 
           setStarfish(_ => starfish);
+
+          if (ending)
+            endInterview();
         })
         .catch(console.error);
     }
@@ -150,6 +209,30 @@ const Chat = () => {
     setTextInput("");
   };
 
+  useEffect(() => {
+    console.log(`Transcript or listening update: transcript=${transcript}, listening=${listening}`)
+    setChatMessages((oldConv) => {
+      let conv = [...oldConv];
+
+      if (conv[conv.length-1].inProgress) {
+        if (listening)
+          conv[conv.length-1].text = transcript;
+        else
+          conv[conv.length-1].inProgress = false;
+      } 
+      else if (listening) {
+        conv.push({
+          position: 'right',
+          title: 'User',
+          text: transcript,
+          inProgress: true,
+        })
+      }
+
+      return conv;
+    });
+  }, [transcript, listening]);
+
   if (!sessionId) {
     return <p>Session ID is undefined. Please provide a valid session ID.</p>;
   }
@@ -170,9 +253,25 @@ const Chat = () => {
             style={{
               marginTop: 20,
               maxHeight: 100,
+              visibility: (browserSupportsSpeechRecognition && !interviewOver) ? 'visible' : 'hidden',
             }}
             onMouseDown={(e: SplineEvent) => {
-              console.log(e.target);
+              console.log('MOUSE_DOWN', listening, transcript);
+              if (e.target.name == 'unmute') {
+                if (listening) {
+                  console.log('stopped listening');
+                  SpeechRecognition.stopListening();
+                  resetTranscript();
+                }
+                else {
+                  console.log('started listening');
+                  SpeechRecognition.startListening({ continuous: true });
+                }
+              } else {
+                console.log('stopped listening');
+                SpeechRecognition.stopListening();
+                resetTranscript();
+              }
             }}
           />
 
@@ -185,8 +284,9 @@ const Chat = () => {
             <div className="align-end">
               <Chatbox messages={chatMessages} />
               <div className="chat-input-row">
-                <div>
+                <div className="chat-input-container">
                   <input
+                    disabled={listening || interviewOver}
                     className="input-field"
                     type="text"
                     value={textInput}
@@ -194,9 +294,12 @@ const Chat = () => {
                     placeholder="Text Something..."
                   />
                 </div>
-                <div>
-                  <button className="btn" onClick={handleChat}>
+                <div className="chat-button-row">
+                  <button disabled={listening || interviewOver} className="btn" onClick={handleChat}>
                     <h1>Send</h1>
+                  </button>
+                  <button disabled={listening || interviewOver} className="btn" onClick={endInterview}>
+                    <h1>End</h1>
                   </button>
                 </div>
               </div>

@@ -43,6 +43,7 @@ h1 {
 }
 
 .btn {
+  font-size: 17px;
   position: relative;
   width: auto;
   cursor: pointer;
@@ -50,18 +51,28 @@ h1 {
   color: rgba(255, 255, 255, 0.7);
   background: none;
   border-width: 2px;
-  border-radius: 20px;
+  border-radius: 12px;
+  padding: 8px;
   border: solid;
   justify-content: center;
   text-align: center;
   display: flex;
-  height: 50px;
   padding: auto;
 }
-.btn:hover {
+
+.btn:disabled {
+  cursor: not-allowed;
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.btn:disabled h1 {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.btn:hover:not(:disabled) {
   background-color: azure;
 }
-.btn:hover h1 {
+.btn:hover:not(:disabled) h1 {
   color: #000;
 }
 
@@ -69,6 +80,7 @@ h1 {
   color: white;
   font-family: "Satoshi";
   font-size: 18px;
+  margin: 0;
 }
 .ab {
   position: absolute;
@@ -345,7 +357,23 @@ h1 {
   display: flex;
   justify-content: center;
   flex-direction: row;
+  width: 100%;
 }
+
+.chat-button-row {
+  display: flex;
+  flex-direction: row;
+  gap: 5px;
+}
+
+.chat-button-row button:last-child {
+  border-bottom-right-radius: 24px;
+}
+
+.chat-input-container {
+  width: 100%;
+}
+
 
 .send-button {
   max-height: 50px;
@@ -356,9 +384,21 @@ h1 {
   display: none;
 }
 .input-field {
+  width: calc(100% - 2 * 10px - 10px);
   max-height: 50px;
-  font-size: 20px;
+  font-size: 17px;
+  font-family: "Satoshi";
   padding: 10px;
+  outline: none;
+  border: 2px solid white;
+  border-radius: 4px;
+  border-bottom-left-radius: 24px;
+}
+.input-field:focus {
+  border: 2px solid #b15858;
+}
+.input-field:disabled {
+  border: 2px solid rgba(255, 255, 255, 0.2);
 }
 
 .chat-bubble {
@@ -373,17 +413,17 @@ h1 {
   text-overflow: clip;
   max-width: 600px;
   animation: popup 0.6s ease forwards;
-  transition: scale 0.2s;
+  /* transition: scale 0.2s; */
 }
 
-.chat-bubble:hover {
+/* .chat-bubble:hover {
   scale: 1.1;
   transition: scale 0.5s;
-}
+} */
 
 .chat-bubble h2 {
   font-family: "Satoshi";
-  font-size: 20px;
+  font-size: 17px;
   max-width: 550px;
   white-space: normal;
   word-wrap: break-word;
