@@ -1,15 +1,5 @@
 const mongoose = require('mongoose');
-const Message = require('./message');
-const Resume = require('./resume');
-/*
-sessionId: String,
-resume: String,
-jobDescription: String,
-summary: String,
-starfish: {
-   ...
-}
-*/
+
 const sessionSchema = new mongoose.Schema({
     sessionId: {
         type: String,
@@ -24,18 +14,19 @@ const sessionSchema = new mongoose.Schema({
         {
             role: String,
             content: String,
+            quality: Number,
         }
     ],
     summary: String,
     jobDescription: String,
     resumeContent: String,
-    starfish:{
-        moreOf: String,
-        keepDoing: String,
-        lessOf: String,
-        stopDoing: String,
-        startDoing: String
-    }
+    starfishResults: {
+        count: {
+            type: Number,
+            default: 0,
+        },
+        sum: [Number],
+    },
 });
 
 const Session = mongoose.model('Session', sessionSchema);
