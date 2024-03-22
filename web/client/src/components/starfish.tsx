@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import Chart from 'chart.js/auto';
+import Chart, { FontSpec } from 'chart.js/auto';
 
 interface StarfishProps {
   attributes: string[];
@@ -14,8 +14,16 @@ export interface IStarfish {
 export const StarfishDiagram: React.FC<StarfishProps> = ({ attributes, values }) => {
   const chartRef = useRef<Chart>();
 
+  const chartFont : Partial<FontSpec> = {
+    size: 15,
+    family: "Satoshi",
+    weight: 'normal',
+  }
+
   useEffect(() => {
     if (!chartRef.current) {
+      Chart.defaults.color = '#fff';
+
       const ctx = document.getElementById('starfish-chart') as HTMLCanvasElement;
       chartRef.current = new Chart(ctx, {
         type: 'radar',
@@ -25,22 +33,23 @@ export const StarfishDiagram: React.FC<StarfishProps> = ({ attributes, values })
             {
               label: 'Overall',
               data: values.overall,
-              backgroundColor: 'rgba(54, 162, 235, 0.2)',
-              borderColor: 'rgba(54, 162, 235, 1)',
-              borderWidth: 1
+              backgroundColor: 'rgba(120, 0, 0, 0.2)',
+              borderColor: 'rgba(120, 0, 0, 1)',
+              borderWidth: 2
             },
             {
-              label: 'Last',
+              label: 'Last Response',
               data: values.last,
-              backgroundColor: 'rgba(162, 54, 235, 0.2)',
-              borderColor: 'rgba(162, 54, 235, 1)',
-              borderWidth: 1
+              backgroundColor: 'rgba(255, 255, 255, 0.2)',
+              borderColor: 'rgba(255, 255, 255, 1)',
+              borderWidth: 2
             }
           ]
         },
         options: {
-          responsive: false,
-          maintainAspectRatio: true,
+          // responsive: false,
+          maintainAspectRatio: false,
+          // aspectRatio: 0.5,
           scales: {
             r: {
               max: 5,
@@ -51,15 +60,21 @@ export const StarfishDiagram: React.FC<StarfishProps> = ({ attributes, values })
                 textStrokeColor: "#fff",
               },
               pointLabels: {
-                font: {
-                  size: 13
-                }
+                font: chartFont,
               }
-            }
+            },
           },
           layout: {
             padding: {
               top: 20
+            }
+          },
+          plugins: {
+            legend: {
+              position: 'left',
+              labels: {
+                font: chartFont,
+              }
             }
           },
         }

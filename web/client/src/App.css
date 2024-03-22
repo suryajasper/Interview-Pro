@@ -373,17 +373,17 @@ h1 {
   text-overflow: clip;
   max-width: 600px;
   animation: popup 0.6s ease forwards;
-  transition: scale 0.2s;
+  /* transition: scale 0.2s; */
 }
 
-.chat-bubble:hover {
+/* .chat-bubble:hover {
   scale: 1.1;
   transition: scale 0.5s;
-}
+} */
 
 .chat-bubble h2 {
   font-family: "Satoshi";
-  font-size: 20px;
+  font-size: 17px;
   max-width: 550px;
   white-space: normal;
   word-wrap: break-word;
