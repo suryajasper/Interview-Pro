@@ -1,15 +1,31 @@
 const express = require('express');
 const gpt = require('./gpt');
 const bodyParser = require('body-parser');
+const Message = require('./db/message');
+const Session = require('./db/session');
+const { connectToMongo, closeMongoConnection } = require('./db/dbs');
+const cors = require('cors');
 
 const app = express();
 const port = 6969;
 
 app.use(bodyParser.json());
+app.use(cors());
+
+connectToMongo();
 
 app.post('/createSession', async (req, res) => {
     try {
+        console.log(`POST /createSession - Received request`);
+
+        let { resumeContent, jobDescription } = req.body;
         const sessionId = await gpt.createSession();
+
+        let sessionDoc = new Session({ sessionId, resumeContent, jobDescription });
+        await sessionDoc.save();
+
+        console.log(`POST /createSession - Successfully created session ${sessionId}`);
+
         res.json({ sessionId });
     } catch (error) {
         res.status(500).json({ error: error.message });
