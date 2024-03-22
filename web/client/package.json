@@ -14,6 +14,7 @@
     "@types/node": "^16.18.90",
     "@types/react": "^18.2.67",
     "@types/react-dom": "^18.2.22",
+    "audiobuffer-to-wav": "^1.0.0",
     "axios": "^1.6.8",
     "framer-motion": "^11.0.18",
     "pdfjs-dist": "^2.16.105",

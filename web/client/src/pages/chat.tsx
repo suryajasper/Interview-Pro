@@ -1,15 +1,24 @@
-import React, { useEffect, useState } from "react";
-import axios from 'axios';
+import React, { useEffect, useState, useRef } from "react";
+import axios from "axios";
 import { useParams } from "react-router-dom";
 import Spline, { SplineEvent } from "@splinetool/react-spline";
 import "../App.css";
 import Avatar from "../components/avatar";
 import { IChatMessage, Chatbox } from "../components/chatbox";
+import { audioGen } from "../utils/audiogen";
 
-interface ChatProps {}
+interface AvatarRef {
+  sendUnityMessage(
+    gameObject: string,
+    methodName: string,
+    value: string | undefined
+  ): void;
+}
 
 const Chat = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
+  const [isTalking, setIsTalking] = useState(true);
+  const avatarRef = useRef<AvatarRef>(null);
   console.log(sessionId);
   const [textInput, setTextInput] = useState<string>("");
   const [chatMessages, setChatMessages] = useState<IChatMessage[]>([
@@ -19,43 +28,51 @@ const Chat = () => {
       text: "Hello I am Kiyo, your AI mock interview assistant. Nice to meet you!",
     },
   ]);
-
+  const sendMessage = (
+    object: string,
+    func: string,
+    value: string | undefined = undefined
+  ) => {
+    avatarRef.current?.sendUnityMessage(object, func, value);
+  };
   const getGptResponse = async (userMessage: string) => {
     try {
-      const postRes = await axios.post("http://localhost:6969/getResponse", { sessionId, userMessage, });
+      const postRes = await axios.post("http://localhost:6969/getResponse", {
+        sessionId,
+        userMessage,
+      });
       const gptResponse = postRes.data.response as string;
       return gptResponse;
+    } catch (error) {
+      console.error("Error getting GPT response: ", error);
     }
-    catch (error) {
-      console.error('Error getting GPT response: ', error);
-    }
-  }
+  };
 
   useEffect(() => {
     if (chatMessages.length === 0) return;
 
-    let lastMessage = chatMessages[chatMessages.length-1];
+    let lastMessage = chatMessages[chatMessages.length - 1];
 
     if (lastMessage.title === "User") {
-      console.log('requesting GPT response');
+      console.log("requesting GPT response");
 
       getGptResponse(lastMessage.text)
-        .then((gptResponse) => {          
-          console.log('received GPT response:', gptResponse);
+        .then((gptResponse) => {
+          console.log("received GPT response:", gptResponse);
 
           setChatMessages((prevState) => [
             ...prevState,
             {
               position: "left",
               title: "Kiyo",
-              text: gptResponse || 'ERROR: Failed to get GPT Response',
+              text: gptResponse || "ERROR: Failed to get GPT Response",
             },
           ]);
         })
         .catch(console.error);
     }
   }, [chatMessages]);
- 
+
   const addSelfMsg = (text: string) => {
     setChatMessages((prevState) => [
       ...prevState,
@@ -79,10 +96,23 @@ const Chat = () => {
       },
     ]);
   };
-
+  const sendAudio = (text: string) => {
+    audioGen(text)
+      .then((audio) => {
+        sendMessage("Lipsync", "ReceiveAudio", JSON.stringify(audio));
+      })
+      .catch((err) => {
+        console.error("Error generating audio:", err);
+      });
+  };
+  const fetchUnityData = (key: string, value: any) => {
+    console.log(isTalking);
+    eval(key)(value);
+    console.log(isTalking);
+  };
   const handleChat = () => {
     if (!textInput) return;
-    
+
     setChatMessages((prevState) => [
       ...prevState,
       {
@@ -106,7 +136,7 @@ const Chat = () => {
           <div className="unity-container">
             <div className="unity-inner">
               <div className="unity-component">
-                <Avatar />
+                <Avatar ref={avatarRef} callback={fetchUnityData} />
               </div>
             </div>
           </div>
