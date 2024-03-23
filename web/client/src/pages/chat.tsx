@@ -21,6 +21,7 @@ interface AvatarRef {
 
 const MAX_SPEECH_TIME_IN_SECONDS = 45;
 
+let listeningGlobal = false;
 let fetchedConv = false;
 let chatTerminationTimeout : ReturnType<typeof setTimeout>;
 
@@ -156,6 +157,8 @@ const Chat = () => {
         .then((res) => {          
           if (!res)
             return;
+
+          setTextInput(_ => "");
 
           let { gptResponse, starfish } = res;
           console.log('received GPT response:', gptResponse);
@@ -300,18 +303,21 @@ const Chat = () => {
             onMouseDown={(e: SplineEvent) => {
               console.log('MOUSE_DOWN', listening, transcript);
               if (e.target.name == 'unmute') {
-                if (listening) {
+                if (listeningGlobal) {
                   console.log('stopped listening');
                   SpeechRecognition.stopListening();
+                  listeningGlobal = false;
                 }
                 else {
                   console.log('started listening');
                   resetTranscript();
                   SpeechRecognition.startListening({ continuous: true });
+                  listeningGlobal = true;
                 }
               } else {
                 console.log('stopped listening');
                 SpeechRecognition.stopListening();
+                listeningGlobal = false;
               }
             }}
           />
