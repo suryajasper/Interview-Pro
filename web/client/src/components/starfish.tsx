@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react';
-import Chart, { FontSpec } from 'chart.js/auto';
+import React, { useEffect, useRef } from "react";
+import Chart, { FontSpec } from "chart.js/auto";
 
 interface StarfishProps {
   attributes: string[];
@@ -11,40 +11,45 @@ export interface IStarfish {
   last: number[];
 }
 
-export const StarfishDiagram: React.FC<StarfishProps> = ({ attributes, values }) => {
+export const StarfishDiagram: React.FC<StarfishProps> = ({
+  attributes,
+  values,
+}) => {
   const chartRef = useRef<Chart>();
 
-  const chartFont : Partial<FontSpec> = {
+  const chartFont: Partial<FontSpec> = {
     size: 15,
     family: "Satoshi",
-    weight: 'normal',
-  }
+    weight: "normal",
+  };
 
   useEffect(() => {
     if (!chartRef.current) {
-      Chart.defaults.color = '#fff';
+      Chart.defaults.color = "#fff";
 
-      const ctx = document.getElementById('starfish-chart') as HTMLCanvasElement;
+      const ctx = document.getElementById(
+        "starfish-chart"
+      ) as HTMLCanvasElement;
       chartRef.current = new Chart(ctx, {
-        type: 'radar',
+        type: "radar",
         data: {
           labels: attributes,
           datasets: [
             {
-              label: 'Overall',
+              label: "Overall",
               data: values.overall,
-              backgroundColor: 'rgba(120, 0, 0, 0.2)',
-              borderColor: 'rgba(120, 0, 0, 1)',
-              borderWidth: 2
+              backgroundColor: "rgba(120, 0, 0, 0.2)",
+              borderColor: "rgba(120, 0, 0, 1)",
+              borderWidth: 2,
             },
             {
-              label: 'Last Response',
+              label: "Last Response",
               data: values.last,
-              backgroundColor: 'rgba(255, 255, 255, 0.2)',
-              borderColor: 'rgba(255, 255, 255, 1)',
-              borderWidth: 2
-            }
-          ]
+              backgroundColor: "rgba(255, 255, 255, 0.2)",
+              borderColor: "rgba(255, 255, 255, 1)",
+              borderWidth: 2,
+            },
+          ],
         },
         options: {
           // responsive: false,
@@ -61,23 +66,23 @@ export const StarfishDiagram: React.FC<StarfishProps> = ({ attributes, values })
               },
               pointLabels: {
                 font: chartFont,
-              }
+              },
             },
           },
           layout: {
             padding: {
-              top: 20
-            }
+              top: 20,
+            },
           },
           plugins: {
             legend: {
-              position: 'left',
+              position: "left",
               labels: {
                 font: chartFont,
-              }
-            }
+              },
+            },
           },
-        }
+        },
       });
     } else {
       chartRef.current.data.labels = attributes;

@@ -1,7 +1,8 @@
-
 import React, { useEffect, useState, useRef } from "react";
-import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
-import axios from 'axios';
+import SpeechRecognition, {
+  useSpeechRecognition,
+} from "react-speech-recognition";
+import axios from "axios";
 import { useParams } from "react-router-dom";
 import Spline, { SplineEvent } from "@splinetool/react-spline";
 import "../App.css";
@@ -23,22 +24,28 @@ const MAX_SPEECH_TIME_IN_SECONDS = 45;
 
 let listeningGlobal = false;
 let fetchedConv = false;
-let chatTerminationTimeout : ReturnType<typeof setTimeout>;
+let chatTerminationTimeout: ReturnType<typeof setTimeout>;
 
 const Chat = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
-  
+
   const [isTalking, setIsTalking] = useState(true);
   const avatarRef = useRef<AvatarRef>(null);
   console.log(sessionId);
-  
+
   const [textInput, setTextInput] = useState<string>("");
   const [interviewOver, setInterviewOver] = useState<boolean>(false);
   const [starfishValues, setStarfish] = useState<IStarfish>({
     overall: [0, 0, 0, 0, 0],
     last: [0, 0, 0, 0, 0],
   });
-  const starfishAttributes = [ "Clarity", "Relevance", "Depth of understanding", "Critical Thinking", "Communication", ];
+  const starfishAttributes = [
+    "Clarity",
+    "Relevance",
+    "Depth of understanding",
+    "Critical Thinking",
+    "Communication",
+  ];
   const [chatMessages, setChatMessages] = useState<IChatMessage[]>([
     {
       position: "left",
@@ -46,7 +53,7 @@ const Chat = () => {
       text: "Hello I am Kiyo, your AI mock interview assistant. Nice to meet you!",
     },
   ]);
-  
+
   const {
     transcript,
     listening,
@@ -57,117 +64,124 @@ const Chat = () => {
 
   const getGptResponse = async (userMessage: string) => {
     try {
-      const postRes = await axios.post("http://localhost:6969/getResponse", { sessionId, userMessage, });
-      return { 
-        gptResponse: postRes.data.gptResponse as string, 
+      const postRes = await axios.post("http://localhost:6969/getResponse", {
+        sessionId,
+        userMessage,
+      });
+      return {
+        gptResponse: postRes.data.gptResponse as string,
         starfish: postRes.data.starfish as IStarfish,
       };
-    }
-    catch (error) {
-      console.error('Error getting GPT response: ', error);
+    } catch (error) {
+      console.error("Error getting GPT response: ", error);
     }
   };
 
   const getSessionData = async () => {
     try {
-      const res = await axios.get<Session | undefined>(`http://localhost:6969/session?sessionId=${sessionId}`);
+      const res = await axios.get<Session | undefined>(
+        `http://localhost:6969/session?sessionId=${sessionId}`
+      );
       return res.data;
+    } catch (error) {
+      console.error("Error getting session data: ", error);
     }
-    catch (error) {
-      console.error('Error getting session data: ', error);
-    }
-  }
+  };
 
   const getAnalysis = async () => {
     try {
-      const res = await axios.get<{analysis: string}>(`http://localhost:6969/getAnalysis?sessionId=${sessionId}`);
+      const res = await axios.get<{ analysis: string }>(
+        `http://localhost:6969/getAnalysis?sessionId=${sessionId}`
+      );
       return res.data;
+    } catch (error) {
+      console.error("Error getting analysis data: ", error);
     }
-    catch (error) {
-      console.error('Error getting analysis data: ', error);
-    }
-  }
+  };
 
   const endInterview = () => {
-    setInterviewOver(_ => true);
+    setInterviewOver((_) => true);
 
     getAnalysis()
-      .then(res => {
-        if (!res)
-          return;
+      .then((res) => {
+        if (!res) return;
 
-        setChatMessages(prevState => [
+        setChatMessages((prevState) => [
           ...prevState,
           {
             position: "left",
             title: "Kiyo",
-            text: res.analysis || 'ERROR: Failed to get analysis',
+            text: res.analysis || "ERROR: Failed to get analysis",
           },
-        ])
+        ]);
       })
-      .catch(console.error)
-  }
+      .catch(console.error);
+  };
 
   useEffect(() => {
     if (chatMessages.length > 0)
-      console.log('UPDATE TO CONVERSATION', listening, chatMessages[chatMessages.length-1]);
-    if (listening)
-      return;
+      console.log(
+        "UPDATE TO CONVERSATION",
+        listening,
+        chatMessages[chatMessages.length - 1]
+      );
+    if (listening) return;
 
     if (chatMessages.length <= 1) {
-      if (fetchedConv)
-        return;
+      if (fetchedConv) return;
 
-      getSessionData()
-        .then(session => {
-          fetchedConv = true;
+      getSessionData().then((session) => {
+        fetchedConv = true;
 
-          if (!session || session.conversation.length <= 1) {
-            setTextInput(_ => "Hi my name is __name__. I'm ready to begin!");
-            return;
-          }
-          
-          const history = session.conversation.slice(1).map(msg => ({ 
-            position: msg.role == 'system' ? 'left' : 'right',
-            title: msg.role == 'system' ? 'Kiyo' : 'User',
-            text: msg.content,
-          }) as IChatMessage);
+        if (!session || session.conversation.length <= 1) {
+          setTextInput((_) => "Hi my name is __name__. I'm ready to begin!");
+          return;
+        }
 
-          const starfish : IStarfish = {
-            overall: session.starfishResults.sum.map(sum => sum / session.starfishResults.count),
-            last: [0, 0, 0, 0, 0],
-          }
+        const history = session.conversation.slice(1).map(
+          (msg) =>
+            ({
+              position: msg.role == "system" ? "left" : "right",
+              title: msg.role == "system" ? "Kiyo" : "User",
+              text: msg.content,
+            } as IChatMessage)
+        );
 
-          setChatMessages(_ => history);
-          setStarfish(_ => starfish)
-        })
+        const starfish: IStarfish = {
+          overall: session.starfishResults.sum.map(
+            (sum) => sum / session.starfishResults.count
+          ),
+          last: [0, 0, 0, 0, 0],
+        };
+
+        setChatMessages((_) => history);
+        setStarfish((_) => starfish);
+      });
 
       return;
     }
 
-    let lastMessage = chatMessages[chatMessages.length-1];
-    if (lastMessage.inProgress)
-      return;
+    let lastMessage = chatMessages[chatMessages.length - 1];
+    if (lastMessage.inProgress) return;
 
     if (lastMessage.title === "User" && !lastMessage.requestedResponse) {
       console.log("requesting GPT response");
       lastMessage.requestedResponse = true;
 
       getGptResponse(lastMessage.text)
-        .then((res) => {          
-          if (!res)
-            return;
+        .then((res) => {
+          if (!res) return;
 
-          setTextInput(_ => "");
+          setTextInput((_) => "");
 
           let { gptResponse, starfish } = res;
-          console.log('received GPT response:', gptResponse);
-          console.log('received starfish values:', starfish);
+          console.log("received GPT response:", gptResponse);
+          console.log("received starfish values:", starfish);
 
           let ending = false;
-          if (gptResponse.includes('<end_interview>')) {
+          if (gptResponse.includes("<end_interview>")) {
             ending = true;
-            gptResponse = gptResponse.replaceAll('<end_interview>', '');
+            gptResponse = gptResponse.replaceAll("<end_interview>", "");
           }
 
           setChatMessages((prevState) => [
@@ -178,13 +192,11 @@ const Chat = () => {
               text: gptResponse || "ERROR: Failed to get GPT Response",
             },
           ]);
+          if (!ending) sendAudio(gptResponse);
 
-          sendAudio(gptResponse);
+          setStarfish((_) => starfish);
 
-          setStarfish(_ => starfish);
-
-          if (ending)
-            endInterview();
+          if (ending) endInterview();
         })
         .catch(console.error);
     }
@@ -213,9 +225,9 @@ const Chat = () => {
       },
     ]);
   };
-  
+
   const sendAudio = (text: string) => {
-    setIsTalking(_ => true);
+    setIsTalking((_) => true);
     audioGen(text)
       .then((audio) => {
         sendMessage("Lipsync", "ReceiveAudio", JSON.stringify(audio));
@@ -224,7 +236,7 @@ const Chat = () => {
         console.error("Error generating audio:", err);
       });
   };
-  
+
   const sendMessage = (
     object: string,
     func: string,
@@ -232,12 +244,11 @@ const Chat = () => {
   ) => {
     avatarRef.current?.sendUnityMessage(object, func, value);
   };
-  
+
   const fetchUnityData = (key: string, value: any) => {
     console.log(`unity response: ${key}=${value}`);
     eval(key)(value);
-    if (key === "setIsTalking")
-      setIsTalking(_ => value as boolean);
+    if (key === "setIsTalking") setIsTalking((_) => value as boolean);
   };
   const handleChat = () => {
     if (!textInput) return;
@@ -255,23 +266,22 @@ const Chat = () => {
   };
 
   useEffect(() => {
-    console.log(`Transcript or listening update: transcript=${transcript}, listening=${listening}`)
+    console.log(
+      `Transcript or listening update: transcript=${transcript}, listening=${listening}`
+    );
     setChatMessages((oldConv) => {
       let conv = [...oldConv];
 
-      if (conv[conv.length-1].inProgress) {
-        if (listening)
-          conv[conv.length-1].text = transcript;
-        else
-          conv[conv.length-1].inProgress = false;
-      } 
-      else if (listening) {
+      if (conv[conv.length - 1].inProgress) {
+        if (listening) conv[conv.length - 1].text = transcript;
+        else conv[conv.length - 1].inProgress = false;
+      } else if (listening) {
         conv.push({
-          position: 'right',
-          title: 'User',
+          position: "right",
+          title: "User",
           text: transcript,
           inProgress: true,
-        })
+        });
       }
 
       return conv;
@@ -298,31 +308,36 @@ const Chat = () => {
             style={{
               marginTop: 20,
               maxHeight: 100,
-              visibility: (browserSupportsSpeechRecognition && !interviewOver && !isTalking) ? 'visible' : 'hidden',
+              visibility:
+                browserSupportsSpeechRecognition && !interviewOver && !isTalking
+                  ? "visible"
+                  : "hidden",
             }}
             onMouseDown={(e: SplineEvent) => {
-              console.log('MOUSE_DOWN', listening, transcript);
-              if (e.target.name == 'unmute') {
+              console.log("MOUSE_DOWN", listening, transcript);
+              if (e.target.name == "unmute") {
                 if (listeningGlobal) {
-                  console.log('stopped listening');
+                  console.log("stopped listening");
                   SpeechRecognition.stopListening();
                   listeningGlobal = false;
-                }
-                else {
-                  console.log('started listening');
+                } else {
+                  console.log("started listening");
                   resetTranscript();
                   SpeechRecognition.startListening({ continuous: true });
                   listeningGlobal = true;
                 }
               } else {
-                console.log('stopped listening');
+                console.log("stopped listening");
                 SpeechRecognition.stopListening();
                 listeningGlobal = false;
               }
             }}
           />
 
-          <StarfishDiagram attributes={starfishAttributes} values={starfishValues}/>
+          <StarfishDiagram
+            attributes={starfishAttributes}
+            values={starfishValues}
+          />
         </div>
         <div className="half-container-chat col">
           <h1>Conversation</h1>
@@ -342,10 +357,16 @@ const Chat = () => {
                   />
                 </div>
                 <div className="chat-button-row">
-                  <button disabled={listening || interviewOver || isTalking} className="btn" onClick={handleChat}>
+                  <button
+                    disabled={listening || interviewOver || isTalking}
+                    className="btn"
+                    onClick={handleChat}>
                     <h1>Send</h1>
                   </button>
-                  <button disabled={listening || interviewOver || isTalking} className="btn" onClick={endInterview}>
+                  <button
+                    disabled={listening || interviewOver || isTalking}
+                    className="btn"
+                    onClick={endInterview}>
                     <h1>End</h1>
                   </button>
                 </div>

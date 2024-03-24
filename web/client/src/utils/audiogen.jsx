@@ -7,7 +7,7 @@ export const audioGen = (text) => {
   newOptions.body = JSON.stringify(body);
 
   return fetch(
-    "https://api.elevenlabs.io/v1/text-to-speech/GBv7mTt0atIp3Br8iCZE",
+    "https://api.elevenlabs.io/v1/text-to-speech/GBv7mTt0atIp3Br8iCZE?optimize_streaming_latency=1",
     newOptions
   )
     .then(async (response) => {
