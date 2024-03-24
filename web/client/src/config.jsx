@@ -10,7 +10,7 @@ export const options = {
       similarity_boost: 0.75,
       stability: 0.62,
     },
-    model_id: "eleven_turbo_v2",
+    model_id: "eleven_multilingual_v1", //"eleven_turbo_v2"
   }),
 };
 export const audioSpeed = 3;
